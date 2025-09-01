@@ -601,7 +601,7 @@ void editorDelChar() {
   else { // Cursor at beginning of a line
     E.cx = E.rows[E.cy - 1].size; // End of contents of the previous row
     editorRowAppendString(&E.rows[E.cy - 1], row->chars, row->size); // Append contents to previous row
-    editorDelRow(E.cy); 
+    editorDelRow(E.cy);
     E.cy--;
   }
 }
@@ -666,6 +666,7 @@ void editorSave() {
       if(write(fd, buf, len) == len) { // Writes the string to the path in E.fileName
         close(fd);
         free(buf);
+        E.dirty = 0; // No new changes
         editorSetStatusMessage("%d BYTES WRITTEN TO DISK", len);
         return;
       }
@@ -674,7 +675,6 @@ void editorSave() {
   }
   free(buf);
   editorSetStatusMessage("UNABLE TO SAVE FILE - I/O error: %s", strerror(errno)); // Human-readable string for the error
-  E.dirty = 0; // No new changes
 }
 
 /*** find ***/
