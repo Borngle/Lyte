@@ -95,13 +95,25 @@ struct editorConfig E;
 
 /*** filetypes ***/
 
-char *C_HL_extensions[] = {".c", ".h", ".cpp", NULL};
+char *C_HL_extensions[] = {".c", ".h", ".cpp", ".hpp", ".cc", NULL};
 char *C_HL_keywords[] = {
-  "switch", "if", "while", "for", "break", "continue", "return", "else",
-  "struct", "union", "typedef", "static", "enum", "class", "case",
+  // C keywords
+  "break", "case", "continue", "default", "do", "else", "enum", "extern",
+  "for", "goto", "if", "register", "return", "sizeof", "static", "struct",
+  "switch", "typedef", "union", "volatile", "while", "NULL",
+  // C++ keywords
+  "alignas", "alignof", "and", "and_eq", "asm", "bitand", "bitor", "catch",
+  "class", "compl", "concept", "consteval", "constexpr", "constinit", "const_cast",
+  "co_await", "co_return", "co_yield", "decltype", "delete", "dynamic_cast",
+  "explicit", "export", "false", "friend", "inline", "mutable", "namespace",
+  "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq",
+  "private", "protected", "public", "reinterpret_cast", "requires", "static_assert",
+  "static_cast", "template", "this", "thread_local", "throw", "true", "try",
+  "typeid", "typename", "using", "virtual", "xor", "xor_eq",
   // Differentiating the two types of keywords by terminating with a pipe
   "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-  "void|", NULL
+  "void|", "short|", "auto|", "const|", "bool|", "final|", "char8_t|",
+  "char16_t|", "char32_t|", "signed|", "unsigned|", NULL
 };
 
 struct editorSyntax HLDB[] = { // Highlight database
