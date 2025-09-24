@@ -22,8 +22,6 @@
 
 #define LYTE_VERSION "1.0.0"
 #define CTRL_KEY(k) ((k) & 0x1f) // Bitmask in hexadecimal to mirror a Ctrl key combination
-#define TAB_STOP 8
-#define QUIT_TIMES 3
 
 enum editorKey {
   BACKSPACE = 127, // Prevents insertion into text
@@ -89,6 +87,8 @@ struct editorConfig { // Global struct to contain our editor state
   struct editorSyntax *syntax;
   time_t statusMsgTime;
   struct termios origTermios;
+  int tabStop;
+  int quitTimes;
 };
 
 struct editorConfig E;
@@ -469,7 +469,7 @@ int editorRowCxToRx(editorRow *row, int cx) {
   int rx = 0;
   for(int i = 0; i < cx; i++) {
     if(row->chars[i] == '\t') {
-      rx += (TAB_STOP - 1) - (rx % TAB_STOP); // Number of columns to right of last tab stop, subtracted from number left of the next
+      rx += (E.tabStop - 1) - (rx % E.tabStop); // Number of columns to right of last tab stop, subtracted from number left of the next
     }
     rx++; // Moves right on the next tab stop
   }
@@ -481,7 +481,7 @@ int editorRowRxToCx(editorRow *row, int rx) {
   int cx;
   for(cx = 0; cx < row->size; cx++) {
     if(row->chars[cx] == '\t') {
-      rxCur += (TAB_STOP - 1) - (rxCur % TAB_STOP);
+      rxCur += (E.tabStop - 1) - (rxCur % E.tabStop);
     }
     rxCur++;
     if(rxCur > rx) {
@@ -500,12 +500,12 @@ void editorUpdateRow(editorRow *row) {
   }
   free(row->render);
   // Maximum number of characters for a tab is 8 (row->size counts for 1 each tab)
-  row->render = malloc(row->size + tabs * (TAB_STOP - 1) + 1);
+  row->render = malloc(row->size + tabs * (E.tabStop - 1) + 1);
   int idx = 0;
   for(int i = 0; i < row->size; i++) {
     if(row->chars[i] == '\t') { // Checks if current character is tab
       row->render[idx++] = ' '; // Append a space
-      while(idx % TAB_STOP != 0) { // Append spaces until a tab stop (column divisible by 8)
+      while(idx % E.tabStop != 0) { // Append spaces until a tab stop (column divisible by 8)
         row->render[idx++] = ' ';
       }
     }
@@ -1057,7 +1057,10 @@ void editorMoveCursor(int key) {
 }
 
 void editorProcessKeypress() { // Handles keypresses
-  static int quitTimes = QUIT_TIMES;
+  static int quitCount = -1;
+  if(quitCount == -1) {
+    quitCount = E.quitTimes;
+  }
   int c = editorReadKey();
   switch(c) { // Maps Ctrl key combinations and special keys to editor functions
     case '\r': // Enter
@@ -1065,9 +1068,9 @@ void editorProcessKeypress() { // Handles keypresses
       break;
     case CTRL_KEY('q'):
       // Clears screen on exit
-      if(E.dirty && quitTimes > 0) {
-        editorSetStatusMessage("WARNING - FILE HAS UNSAVED CHANGES: PRESS CTRL-Q %d MORE TIMES TO QUIT", quitTimes);
-        quitTimes--;
+      if(E.dirty && quitCount > 0) {
+        editorSetStatusMessage("WARNING - FILE HAS UNSAVED CHANGES: PRESS CTRL-Q %d MORE TIMES TO QUIT", quitCount);
+        quitCount--;
         return;
       }
       write(STDOUT_FILENO, "\x1b[2J", 4);
@@ -1127,10 +1130,40 @@ void editorProcessKeypress() { // Handles keypresses
       editorInsertChar(c);
       break;
   }
-  quitTimes = QUIT_TIMES;
+  quitCount = E.quitTimes;
 }
 
 /*** init ***/
+
+void readConfig() {
+  FILE *config = fopen(".lyterc", "r");
+  if(!config) {
+    die("fopen");
+  }
+  char buf[256];
+  while(fgets(buf, sizeof(buf), config)) {
+    buf[strcspn(buf, "\n")] = '\0'; // Strips newline at the end
+    int charCount = 0;
+    for(int i = 0; buf[i] != '\0'; i++) { // Removing spaces from line
+      if(buf[i] != ' ') {
+        buf[charCount] = buf[i];
+        charCount++;
+      }
+    }
+    buf[charCount] = '\0'; // Null terminates
+    char *key = strtok(buf, "=");
+    char *value = strtok(NULL, "=");
+    if(key && value) {
+      if(strcasecmp(key, "TAB_STOP") == 0) {
+        E.tabStop = atoi(value);
+      }
+      if(strcasecmp(key, "QUIT_TIMES") == 0) {
+        E.quitTimes = atoi(value);
+      }
+    }
+  }
+  fclose(config);
+}
 
 void initEditor() { // Initialises all fields in E struct
   E.cx = 0; // Horizontal cursor coordinate (column)
@@ -1145,6 +1178,9 @@ void initEditor() { // Initialises all fields in E struct
   E.statusMsg[0] = '\0';
   E.statusMsgTime = 0;
   E.syntax = NULL; // No filetype initially -> no syntax highlighting
+  // Default values if none set in .lyterc
+  E.tabStop = 8;
+  E.quitTimes = 3;
   if(getWindowSize(&E.screenRows, &E.screenCols) == -1) {
     die("getWindowSize");
   }
@@ -1154,6 +1190,7 @@ void initEditor() { // Initialises all fields in E struct
 int main(int argc, char *argv[]) {
   enableRawMode();
   initEditor();
+  readConfig();
   if(argc >= 2) {
     editorOpen(argv[1]);
   }
