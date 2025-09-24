@@ -1,8 +1,10 @@
 # Lyte
-Developed as an extension of 'kilo', Lyte currently offers syntax highlighting for more languages and a config file to allow greater personalisation of the appearance and behaviour of the editor.
+Developed as an extension of 'kilo', Lyte currently offers syntax highlighting for more languages and a config file to allow greater personalisation of the appearance and behaviour of the editor. 
+
+There are more functionality and quality of life changes to come.
 
 ## Usage
-Editing existing file:
+Editing an existing file:
 ```
 ./lyte <file>
 ```
