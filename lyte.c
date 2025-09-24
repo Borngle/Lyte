@@ -20,7 +20,7 @@
 
 /*** defines ***/
 
-#define LYTE_VERSION "1.0.0"
+#define LYTE_VERSION "1.0.2"
 #define CTRL_KEY(k) ((k) & 0x1f) // Bitmask in hexadecimal to mirror a Ctrl key combination
 
 enum editorKey {
