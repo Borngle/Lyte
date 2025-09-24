@@ -20,7 +20,7 @@
 
 /*** defines ***/
 
-#define LYTE_VERSION "1.0.2"
+#define LYTE_VERSION "1.0.3"
 #define CTRL_KEY(k) ((k) & 0x1f) // Bitmask in hexadecimal to mirror a Ctrl key combination
 
 enum editorKey {
@@ -129,6 +129,14 @@ char *Java_HL_keywords[] = {
   "int|", "long|", "short|", "static|", "synchronized|", "var|", "void|", NULL
 };
 
+char *Python_HL_extensions[] = {".py", NULL};
+char *Python_HL_keywords[] = {
+  "and", "as", "assert", "async", "await", "break", "case", "class", "continue",
+  "def", "del", "elif", "else", "except", "False", "finally", "for", "from",
+  "global", "if", "import", "in", "is", "lambda", "match", "None", "nonlocal",
+  "not", "or", "pass", "raise", "return", "True", "try", "while", "with", "yield", NULL
+};
+
 struct editorSyntax HLDB[] = { // Highlight database
   {
     "c",
@@ -142,6 +150,13 @@ struct editorSyntax HLDB[] = { // Highlight database
     Java_HL_extensions,
     Java_HL_keywords,
     "//", "/*", "*/",
+    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+  },
+  {
+    "python",
+    Python_HL_extensions,
+    Python_HL_keywords,
+    "#", "\"\"\"", "\"\"\"",
     HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
   }
 };
@@ -306,7 +321,7 @@ int getWindowSize(int *rows, int *cols) {
 
 int isSeparator(int c) {
   // strchr returns pointer to first occurrence of a matching character
-  return isspace(c) || c == '\0' || strchr(",.()+-/" "*" "=~%<>[];", c) != NULL;
+  return isspace(c) || c == '\0' || strchr(",.()+-/" "*" "=~%<>[];{}", c) != NULL;
 }
 
 void editorUpdateSyntax(editorRow *row) { // Goes through characters in an editorRow and highlights them
