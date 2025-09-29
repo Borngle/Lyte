@@ -3,6 +3,14 @@ Developed as an extension of 'kilo', Lyte currently offers syntax highlighting f
 
 There are more functionality and quality of life changes to come.
 
+## Initialisation
+You must have a C99 compiler installed (e.g. GCC or Clang) to build the program with the Makefile.
+
+Compiling lyte.c to an executable:
+```
+make
+```
+
 ## Usage
 Editing an existing file:
 ```
